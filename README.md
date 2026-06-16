@@ -5,6 +5,8 @@ It uses an OLED display to show animated robot eyes, a servo motor to move the h
 
 The robot can display expressive animated eyes, show basic weather information, move its head using a servo motor, and react to touch input.
 
+The DROID version uses different eyes and Sci-Fi animations inside the screen. Simply put the main and the eyes file in the ESP32 instead of the classical ones and enjoy.
+
 ## Features
 
 - Animated robot eyes on OLED display
