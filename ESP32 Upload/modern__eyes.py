@@ -1,8 +1,3 @@
-# modern_eyes.py
-# Cartoon/RoboEyes-style robot eyes for SSD1306 128x64 in MicroPython.
-# Compatible API: setMood(), setPosition(), wink(), pulse(), update(),
-# setAutoblinker(), and setIdleMode().
-
 from time import ticks_ms, ticks_diff
 import urandom
 import math
@@ -42,14 +37,14 @@ class ModernEyes:
         self.bg = 0
         self.fg = 1
 
-        # Cartoon/RoboEyes-like geometry
+        # Geometria cartoon/RoboEyes-like
         self.base_eye_w = 34
         self.base_eye_h = 34
         self.base_gap = 14
         self.base_radius = 10
         self.center_y = 34
 
-        # Current state
+        # Stato corrente
         self.cur_w_l = self.base_eye_w
         self.cur_w_r = self.base_eye_w
         self.cur_h_l = self.base_eye_h
@@ -87,13 +82,14 @@ class ModernEyes:
         self.tgt_pupil_x = 0
         self.tgt_pupil_y = 0
 
-        # Global transition speed. Lower values are smoother/slower.
+        # Velocità generale delle transizioni.
+        # Più basso = più morbido/lento.
         self.motion_speed = 0.075
 
         self.mood = self.DEFAULT
         self.position = self.POS_DEFAULT
 
-        # Natural blinking
+        # Blink naturale
         self.blink_enabled = True
         self.blinking = False
         self.blink_next = ticks_ms() + self._rand(1800, 5200)
@@ -102,23 +98,23 @@ class ModernEyes:
         self.blink_hold_ms = 35
         self.blink_open_ms = 130
 
-        # Curious idle behavior
+        # Idle curioso
         self.idle_enabled = True
         self.idle_next = ticks_ms() + self._rand(1800, 4200)
         self.idle_return_at = 0
 
-        # Organic micro movement
+        # Micro movimento organico
         self.micro_enabled = True
         self.micro_phase_x = self._rand(0, 628) / 100.0
         self.micro_phase_y = self._rand(0, 628) / 100.0
 
-        # Saccades: small gaze jumps
+        # Saccadi, piccoli scatti dello sguardo
         self.saccade_next = ticks_ms() + self._rand(900, 2600)
         self.saccade_until = 0
         self.saccade_x = 0
         self.saccade_y = 0
 
-        # Reactions
+        # Reazioni
         self.wink_active = False
         self.wink_side = "R"
         self.wink_start = 0
@@ -138,7 +134,9 @@ class ModernEyes:
 
         self.setMood(self.DEFAULT, immediate=True)
 
-    # Utilities
+    # -----------------------
+    # Utility
+    # -----------------------
     def _rand(self, a, b):
         return a + (urandom.getrandbits(16) % (b - a + 1))
 
@@ -159,7 +157,9 @@ class ModernEyes:
             return b
         return v
 
-    # Compatible API
+    # -----------------------
+    # API compatibile
+    # -----------------------
     def setDisplayColors(self, bg, fg):
         self.bg = bg
         self.fg = fg
@@ -194,13 +194,14 @@ class ModernEyes:
     def setMood(self, mood, transition_ms=850, immediate=False):
         self.mood = mood
 
-        # transition_ms is converted into a smooth speed. Higher values are slower.
+        # transition_ms viene convertito in una velocità morbida.
+        # Valori più alti = transizione più lenta.
         if transition_ms <= 0:
             self.motion_speed = 1.0
         else:
             self.motion_speed = self._clamp(70.0 / transition_ms, 0.045, 0.16)
 
-        # Reset base target
+        # Reset target base
         self.tgt_w_l = self.base_eye_w
         self.tgt_w_r = self.base_eye_w
         self.tgt_h_l = self.base_eye_h
@@ -214,7 +215,7 @@ class ModernEyes:
         self.tgt_slant_l = 0
         self.tgt_slant_r = 0
 
-        # Cartoon expressions
+        # Espressioni cartoon
         if mood == self.DEFAULT:
             pass
 
@@ -243,7 +244,7 @@ class ModernEyes:
             self.tgt_lid_bottom_r = 2
 
         elif mood == self.CURIOUS:
-            # One eye wider and the other narrower, o_O style
+            # Un occhio più aperto e l'altro più stretto, stile o_O
             self.tgt_w_l = self.base_eye_w + 5
             self.tgt_h_l = self.base_eye_h + 4
             self.tgt_w_r = self.base_eye_w - 6
@@ -337,7 +338,8 @@ class ModernEyes:
         self.tgt_pupil_x = x
         self.tgt_pupil_y = y
 
-        # Slightly move the whole eye group for a less static cartoon effect.
+        # Sposta leggermente anche tutto il gruppo occhi:
+        # effetto più cartoon, meno statico.
         self.tgt_eye_offset_x = int(x * 0.35)
         self.tgt_eye_offset_y = int(y * 0.35)
 
@@ -362,7 +364,9 @@ class ModernEyes:
         self.laugh_start = ticks_ms()
         self.laugh_duration = duration_ms
 
-    # Drawing primitives
+    # -----------------------
+    # Disegno primitive
+    # -----------------------
     def _rounded_rect(self, x, y, w, h, r, col):
         x = int(x)
         y = int(y)
@@ -385,11 +389,11 @@ class ModernEyes:
         for yy in range(-r, r + 1):
             dx = int((rr - yy * yy) ** 0.5)
 
-            # left top/bottom
+            # sinistra alto/basso
             self.oled.hline(x + r - dx, y + r + yy, dx + 1, col)
             self.oled.hline(x + r - dx, y + h - r + yy, dx + 1, col)
 
-            # right top/bottom
+            # destra alto/basso
             self.oled.hline(x + w - r, y + r + yy, dx + 1, col)
             self.oled.hline(x + w - r, y + h - r + yy, dx + 1, col)
 
@@ -429,11 +433,12 @@ class ModernEyes:
 
             yy = y + i
 
-            # Approximate upper eyelid fill; works well on small OLEDs.
+            # Riempimento approssimato della palpebra superiore.
+            # Funziona bene su OLED piccoli.
             if yy <= max(cut_left, cut_right):
                 self.oled.hline(int(x), int(yy), int(w), self.bg)
 
-        # Diagonal white eyebrow/eyelid line
+        # Linea bianca diagonale tipo sopracciglio/palpebra
         if lid > 2 or slant != 0:
             if is_left:
                 x1 = int(x + 2)
@@ -455,11 +460,11 @@ class ModernEyes:
         yy = int(y + h - lid)
         self.oled.fill_rect(int(x), yy, int(w), int(lid) + 2, self.bg)
 
-        # Simplified curved white line
+        # Linea bianca curva/semplificata
         self.oled.hline(int(x + 4), yy, int(w - 8), self.fg)
 
     def _draw_pupil_cutout(self, cx, cy, px, py, mood):
-        # Negative pupil, comic style on a white eye.
+        # Pupilla negativa, stile fumetto su occhio bianco.
         if mood == self.SLEEP:
             return
 
@@ -474,7 +479,7 @@ class ModernEyes:
 
         self._rounded_rect(cx + px - 4, cy + py - 6, 8, 12, 3, self.bg)
 
-        # Small internal highlight
+        # Piccolo highlight interno
         self.oled.pixel(int(cx + px - 1), int(cy + py - 3), self.fg)
         self.oled.pixel(int(cx + px), int(cy + py - 3), self.fg)
 
@@ -482,7 +487,7 @@ class ModernEyes:
         cx = int(cx)
         cy = int(cy)
 
-        # Small black heart inside the white eye.
+        # Cuoricino nero dentro l'occhio bianco.
         pts = [
             (0, -3),
             (-3, -6),
@@ -494,7 +499,7 @@ class ModernEyes:
             (3, -6),
         ]
 
-        # Simplified filled pixel/line version
+        # Versione pixel/linee piena semplificata
         self.oled.hline(cx - 3, cy - 4, 3, self.bg)
         self.oled.hline(cx + 1, cy - 4, 3, self.bg)
         self.oled.hline(cx - 5, cy - 3, 11, self.bg)
@@ -507,7 +512,7 @@ class ModernEyes:
         self.oled.pixel(cx, cy + 4, self.bg)
 
     def _draw_brow(self, cx, cy, w, mood, is_left):
-        # Cartoon eyebrows make expressions easier to read.
+        # Sopracciglia cartoon, molto utili per espressioni leggibili.
         y = int(cy - 27)
         half = int(w / 2)
 
@@ -541,18 +546,18 @@ class ModernEyes:
         x = int(cx - w / 2)
         y = int(cy - h / 2)
 
-        # Eye body: filled capsule
+        # Corpo occhio: capsula piena
         r = min(self.base_radius, int(w / 3), int(h / 2))
         self._rounded_rect(x, y, int(w), int(h), r, self.fg)
 
-        # Black eyelids cut into the shape
+        # Palpebre nere che tagliano la forma
         self._erase_top_lid(x, y, int(w), int(lid_top), int(slant), is_left)
         self._erase_bottom_lid(x, y, int(w), int(h), int(lid_bottom))
 
-        # Pupil / cutout
+        # Pupilla / cutout
         self._draw_pupil_cutout(int(cx), int(cy), int(px), int(py), self.mood)
 
-        # Lower edge / comic-style shine
+        # Bordo inferiore/luce stile fumetto
         if self.mood not in (self.SLEEP,):
             self.oled.pixel(x + int(w * 0.22), y + int(h * 0.78), self.bg)
             self.oled.pixel(x + int(w * 0.22) + 1, y + int(h * 0.78), self.bg)
@@ -562,7 +567,7 @@ class ModernEyes:
         self.oled.text("Z", 104, 3, self.fg)
 
     def _draw_sweat_drop(self):
-        # Cartoon drop for confused/tired expressions
+        # Goccia cartoon per espressione confusa/stanca
         x = 103
         y = 19
         self.oled.pixel(x + 2, y, self.fg)
@@ -572,7 +577,9 @@ class ModernEyes:
         self.oled.hline(x + 1, y + 4, 3, self.fg)
         self.oled.pixel(x + 2, y + 5, self.fg)
 
-    # Animation updates
+    # -----------------------
+    # Aggiornamenti animazioni
+    # -----------------------
     def _update_blink(self, now):
         if not self.blink_enabled:
             return 0
@@ -661,7 +668,9 @@ class ModernEyes:
 
         return ox, oy
 
+    # -----------------------
     # Main update
+    # -----------------------
     def update(self):
         now = ticks_ms()
 
@@ -675,7 +684,7 @@ class ModernEyes:
         sx, sy = self._update_saccade(now)
         rx, ry = self._reaction_offsets(now)
 
-        # Smooth micro movement
+        # Micro movimento morbido
         t = now / 1000.0
         mx = math.sin(t * 1.55 + self.micro_phase_x) * 1.1 if self.micro_enabled else 0
         my = math.sin(t * 1.05 + self.micro_phase_y) * 0.7 if self.micro_enabled else 0
@@ -735,17 +744,17 @@ class ModernEyes:
                 phase = elapsed / self.pulse_duration
                 pulse = math.sin(phase * math.pi) * 4
 
-        # Final dimensions
+        # Dimensioni finali
         w_l = self.cur_w_l + pulse
         w_r = self.cur_w_r + pulse
         h_l = self.cur_h_l + pulse
         h_r = self.cur_h_r + pulse
 
-        # Blink closes both eyes
+        # Blink chiude entrambi
         h_l = max(5, h_l * (1 - blink * 0.84))
         h_r = max(5, h_r * (1 - blink * 0.84))
 
-        # Wink closes one eye
+        # Wink chiude un occhio
         h_l = max(5, h_l * (1 - wink_l * 0.9))
         h_r = max(5, h_r * (1 - wink_r * 0.9))
 
@@ -765,7 +774,7 @@ class ModernEyes:
 
         self.oled.fill(self.bg)
 
-        # Draw eyebrows before eyes
+        # Sopracciglia prima degli occhi
         self._draw_brow(lx, int(cy), int(w_l), self.mood, True)
         self._draw_brow(rx_c, int(cy), int(w_r), self.mood, False)
 

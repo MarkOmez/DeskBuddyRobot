@@ -63,9 +63,10 @@ The DROID version uses different eyes and Sci-Fi animations inside the screen. S
   - uPyCraft
   - ArduinoLab for Micropython
 
-Required files:
+## Installation guide
 
-```text
-main.py
-modern_eyes.py
-ssd1306.py
+Simply connect the esp32 in you preferred environment and copy the content of the ESP32 Upload folder. Next you can apply some customizations:
+- Select eye type at row 31 in main.py (you can choose classic, modern or droid)
+- Customize some of the timeouts (especially weather forecasts can generate timeouts in the web answer)
+
+
